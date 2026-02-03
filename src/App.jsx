@@ -242,12 +242,24 @@ function MyOrderTab(){
     </div>}
 
     {/* ORDER SUMMARY */}
-    {lines.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(80px,1fr))",gap:8,marginBottom:16}}>
-      <div style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9}}>Total</div><div style={{fontSize:20,fontWeight:700,color:"#1c1c1e",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>${st.total.toFixed(0)}</div><div style={{fontSize:10,color:"#aeaeb2",marginTop:2}}>{st.lines} items</div></div>
-      <div style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9,color:"#34c759"}}>SJ</div><div style={{fontSize:20,fontWeight:700,color:"#34c759",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{st.sjN}</div><div style={{fontSize:10,color:"#aeaeb2",marginTop:2}}>${st.sjT.toFixed(0)}</div></div>
-      <div style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9,color:"#ff9f0a"}}>CJ</div><div style={{fontSize:20,fontWeight:700,color:"#ff9f0a",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{st.cjN}</div><div style={{fontSize:10,color:"#aeaeb2",marginTop:2}}>${st.cjT.toFixed(0)}</div></div>
-      {st.unmatched>0&&<div style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9,color:"#ff3b30"}}>Miss</div><div style={{fontSize:20,fontWeight:700,color:"#ff3b30",lineHeight:1.1}}>{st.unmatched}</div></div>}
-    </div>}
+    {lines.length>0&&<>
+      <div style={{...S.card,padding:"16px",marginBottom:12,background:"linear-gradient(180deg,#1c1c1e 0%,#2c2c2e 100%)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:10,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Est. Total Before Tax</div>
+            <div style={{fontSize:32,fontWeight:700,color:"#fff",lineHeight:1,fontVariantNumeric:"tabular-nums"}}>${st.total.toFixed(2)}</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:11,color:"#8e8e93",marginBottom:2}}>{st.lines} items</div>
+            {st.unmatched>0&&<div style={{fontSize:11,color:"#ff6b6b"}}>{st.unmatched} unpriced</div>}
+          </div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+        <div style={{...S.card,padding:"12px 14px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{...S.lbl,marginBottom:4,fontSize:9,color:"#34c759"}}>Order from SJ</div><div style={{fontSize:11,color:"#8e8e93"}}>{st.sjN} items</div></div><div style={{fontSize:20,fontWeight:700,color:"#34c759",fontVariantNumeric:"tabular-nums"}}>${st.sjT.toFixed(2)}</div></div></div>
+        <div style={{...S.card,padding:"12px 14px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{...S.lbl,marginBottom:4,fontSize:9,color:"#ff9f0a"}}>Order from CJ</div><div style={{fontSize:11,color:"#8e8e93"}}>{st.cjN} items</div></div><div style={{fontSize:20,fontWeight:700,color:"#ff9f0a",fontVariantNumeric:"tabular-nums"}}>${st.cjT.toFixed(2)}</div></div></div>
+      </div>
+    </>}
 
     {/* ORDER LINES */}
     {lines.length>0&&<>
