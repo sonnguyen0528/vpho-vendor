@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 
 const ITEMS = [
   { id: 1, cat: "Protein", name: "Chicken Breast Boneless 40lb", unit: "/LB", sj: 1.45, cj: 1.55, sjD: "Wayne Sanderson S/L Butterfly #40", cjD: "WF Fresh 40lbs", sjI: "12/22", cjI: "01/13", note: "CJ ranged $1.45–$1.55 across invoices", kw: "chicken breast boneless" },
@@ -304,6 +304,101 @@ function MyOrderTab(){
   </div>;
 }
 
+/* ══════ TAB 3 — CHAT ══════ */
+function ChatTab(){
+  const[apiKey,setApiKey]=useState(()=>localStorage.getItem("anthropic_api_key")||"");
+  const[showKey,setShowKey]=useState(false);
+  const[messages,setMessages]=useState([]);
+  const[input,setInput]=useState("");
+  const[loading,setLoading]=useState(false);
+  const messagesEndRef=useRef(null);
+  const inputRef=useRef(null);
+
+  useEffect(()=>{messagesEndRef.current?.scrollIntoView({behavior:"smooth"});},[messages]);
+
+  const saveKey=(k)=>{setApiKey(k);if(k)localStorage.setItem("anthropic_api_key",k);else localStorage.removeItem("anthropic_api_key");};
+
+  const systemPrompt=`You are a helpful assistant for V Pho restaurant in Campbell, CA. You help with purchasing decisions, vendor comparisons, and ordering.
+
+Here is the current price database for reference (${ITEMS.length} items from SJ Distributors and CJ Distribution):
+
+${ITEMS.map(i=>`- ${i.name} (${i.cat}, ${i.unit}): SJ=${i.sj!=null?"$"+i.sj.toFixed(2):"N/A"}, CJ=${i.cj!=null?"$"+i.cj.toFixed(2):"N/A"}${i.note?" ["+i.note+"]":""}`).join("\n")}
+
+Key insights:
+- SJ is cheaper for: ${ITEMS.filter(i=>i.sj!=null&&i.cj!=null&&i.sj<i.cj).length} items
+- CJ is cheaper for: ${ITEMS.filter(i=>i.sj!=null&&i.cj!=null&&i.cj<i.sj).length} items
+- Items only at SJ: ${ITEMS.filter(i=>i.sj!=null&&i.cj==null).length}
+- Items only at CJ: ${ITEMS.filter(i=>i.cj!=null&&i.sj==null).length}
+
+Be concise and helpful. When asked about prices or recommendations, reference the actual data above.`;
+
+  const sendMessage=async()=>{
+    if(!input.trim()||!apiKey||loading)return;
+    const userMsg={role:"user",content:input.trim()};
+    setMessages(prev=>[...prev,userMsg]);
+    setInput("");
+    setLoading(true);
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1024,system:systemPrompt,messages:[...messages,userMsg].map(m=>({role:m.role,content:m.content}))})
+      });
+      if(!res.ok){const err=await res.json();throw new Error(err.error?.message||"API error");}
+      const data=await res.json();
+      const assistantMsg={role:"assistant",content:data.content[0]?.text||"No response"};
+      setMessages(prev=>[...prev,assistantMsg]);
+    }catch(e){setMessages(prev=>[...prev,{role:"assistant",content:`Error: ${e.message}`}]);}
+    setLoading(false);
+    inputRef.current?.focus();
+  };
+
+  return<div className="content-pad" style={{display:"flex",flexDirection:"column",height:"calc(100vh - 200px)"}}>
+    {/* API Key Setup */}
+    {!apiKey?<div style={{...S.card,padding:"24px",textAlign:"center",marginBottom:16}}>
+      <div style={{fontSize:32,marginBottom:12}}>🔑</div>
+      <div style={{fontSize:15,fontWeight:600,color:"#1c1c1e",marginBottom:8}}>Connect to Claude</div>
+      <div style={{fontSize:12,color:"#8e8e93",lineHeight:1.5,marginBottom:16,maxWidth:320,margin:"0 auto 16px"}}>Enter your Anthropic API key to chat. Your key is stored locally in your browser only.</div>
+      <input type={showKey?"text":"password"} placeholder="sk-ant-..." value={apiKey} onChange={e=>setApiKey(e.target.value)} style={{...S.card,borderRadius:10,padding:"12px 16px",color:"#1c1c1e",fontSize:14,fontFamily:"monospace",width:"100%",maxWidth:360,outline:"none",marginBottom:12}}/>
+      <div style={{display:"flex",justifyContent:"center",gap:8}}>
+        <button onClick={()=>setShowKey(!showKey)} style={{...pill(false),padding:"8px 16px",borderRadius:8,fontSize:12,fontWeight:600}}>{showKey?"Hide":"Show"}</button>
+        <button onClick={()=>saveKey(apiKey)} disabled={!apiKey.startsWith("sk-")} style={{...pill(apiKey.startsWith("sk-")),padding:"8px 20px",borderRadius:8,fontSize:13,fontWeight:600,opacity:apiKey.startsWith("sk-")?1:.5}}>Connect</button>
+      </div>
+      <div style={{fontSize:11,color:"#aeaeb2",marginTop:16}}>Get your key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" style={{color:"#007aff"}}>console.anthropic.com</a></div>
+    </div>:
+    <>
+      {/* Chat Header */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{width:32,height:32,borderRadius:8,background:"linear-gradient(135deg,#d97706,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🤖</div>
+          <div><div style={{fontSize:14,fontWeight:600,color:"#1c1c1e"}}>Claude Assistant</div><div style={{fontSize:11,color:"#8e8e93"}}>V Pho Purchasing Help</div></div>
+        </div>
+        <button onClick={()=>{saveKey("");setMessages([]);}} style={{...pill(false),padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600,color:"#ff3b30"}}>Disconnect</button>
+      </div>
+
+      {/* Messages */}
+      <div style={{flex:1,overflowY:"auto",marginBottom:12,...S.card,padding:12,borderRadius:12}}>
+        {messages.length===0&&<div style={{textAlign:"center",padding:"40px 20px",color:"#8e8e93"}}>
+          <div style={{fontSize:28,marginBottom:8}}>👋</div>
+          <div style={{fontSize:13,fontWeight:500,marginBottom:8}}>Ask me anything about your orders!</div>
+          <div style={{fontSize:12,lineHeight:1.6}}>Try: "What's cheaper at SJ?" or "Best price for chicken breast?" or "Help me plan a $500 order"</div>
+        </div>}
+        {messages.map((m,i)=><div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",marginBottom:8}}>
+          <div style={{maxWidth:"85%",padding:"10px 14px",borderRadius:12,background:m.role==="user"?"linear-gradient(135deg,#007aff,#0051d4)":"#f2f2f7",color:m.role==="user"?"#fff":"#1c1c1e",fontSize:13,lineHeight:1.5,whiteSpace:"pre-wrap"}}>{m.content}</div>
+        </div>)}
+        {loading&&<div style={{display:"flex",justifyContent:"flex-start",marginBottom:8}}><div style={{padding:"10px 14px",borderRadius:12,background:"#f2f2f7",color:"#8e8e93",fontSize:13}}>Thinking...</div></div>}
+        <div ref={messagesEndRef}/>
+      </div>
+
+      {/* Input */}
+      <div style={{display:"flex",gap:8}}>
+        <input ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}}} placeholder="Ask about prices, orders, vendors..." style={{...S.card,flex:1,borderRadius:12,padding:"12px 16px",color:"#1c1c1e",fontSize:14,fontFamily:"inherit",outline:"none"}}/>
+        <button onClick={sendMessage} disabled={!input.trim()||loading} style={{...pill(!!input.trim()&&!loading),padding:"12px 20px",borderRadius:12,fontSize:14,fontWeight:600,opacity:input.trim()&&!loading?1:.5}}>Send</button>
+      </div>
+    </>}
+  </div>;
+}
+
 /* ══════ MAIN ══════ */
 export default function App(){
   const[tab,setTab]=useState("order");
@@ -387,10 +482,10 @@ export default function App(){
       <p className="desktop-only" style={{fontSize:12,color:"#aeaeb2",fontWeight:500,marginBottom:20}}>{ITEMS.length} items · 15 invoices · Dec 2025 – Jan 2026 · CJ Distribution vs SJ Distributors</p>
       <p className="mobile-only" style={{fontSize:11,color:"#aeaeb2",fontWeight:500,marginBottom:16}}>{ITEMS.length} items · CJ vs SJ</p>
       <div style={{display:"flex",gap:4,marginBottom:4,background:"rgba(0,0,0,.04)",borderRadius:12,padding:3,width:"fit-content"}}>
-        {[["compare","Price Compare"],["order","My Order"]].map(([k,l])=><button key={k} className="tab-btn" onClick={()=>setTab(k)} style={{border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,letterSpacing:.1,borderRadius:10,transition:"all .15s",background:tab===k?"linear-gradient(180deg,#fff 0%,#f8f8fa 100%)":"transparent",color:tab===k?"#1c1c1e":"#8e8e93",boxShadow:tab===k?"0 1px 3px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.9)":"none"}}>{l}</button>)}
+        {[["compare","Prices"],["order","Order"],["chat","Chat"]].map(([k,l])=><button key={k} className="tab-btn" onClick={()=>setTab(k)} style={{border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,letterSpacing:.1,borderRadius:10,transition:"all .15s",background:tab===k?"linear-gradient(180deg,#fff 0%,#f8f8fa 100%)":"transparent",color:tab===k?"#1c1c1e":"#8e8e93",boxShadow:tab===k?"0 1px 3px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.9)":"none"}}>{l}</button>)}
       </div>
     </div>
-    {tab==="compare"?<PriceCompareTab/>:<MyOrderTab/>}
+    {tab==="compare"?<PriceCompareTab/>:tab==="order"?<MyOrderTab/>:<ChatTab/>}
     <div className="footer-pad" style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:11,color:"#aeaeb2",fontWeight:500,borderTop:"1px solid rgba(0,0,0,.04)",flexWrap:"wrap",gap:8}}>
       <span>V Pho · Campbell CA</span>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
