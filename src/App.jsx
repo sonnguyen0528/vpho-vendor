@@ -118,24 +118,28 @@ function PriceCompareTab(){
   const rows=useMemo(()=>{let r=ITEMS;if(cat!=="All")r=r.filter(i=>i.cat===cat);if(q){const s=q.toLowerCase();r=r.filter(i=>i.name.toLowerCase().includes(s)||(i.sjD||"").toLowerCase().includes(s)||(i.cjD||"").toLowerCase().includes(s));}if(filter==="matched")r=r.filter(i=>i.sj!=null&&i.cj!=null);if(filter==="sj-only")r=r.filter(i=>i.sj!=null&&i.cj==null);if(filter==="cj-only")r=r.filter(i=>i.cj!=null&&i.sj==null);if(sort==="savings")r=[...r].sort((a,b)=>(diff(b.sj,b.cj)||0)-(diff(a.sj,a.cj)||0));else if(sort==="name")r=[...r].sort((a,b)=>a.name.localeCompare(b.name));else if(sort==="price")r=[...r].sort((a,b)=>Math.min(a.sj||1e6,a.cj||1e6)-Math.min(b.sj||1e6,b.cj||1e6));return r;},[cat,q,sort,filter]);
   const stats=useMemo(()=>{const m=ITEMS.filter(i=>i.sj!=null&&i.cj!=null);const top=m.map(i=>({...i,d:diff(i.sj,i.cj),p:pct(i.sj,i.cj),win:w(i.sj,i.cj)})).filter(i=>i.d>0).sort((a,b)=>b.p-a.p).slice(0,6);return{total:ITEMS.length,matched:m.length,sjW:m.filter(i=>i.sj<i.cj).length,cjW:m.filter(i=>i.cj<i.sj).length,tie:m.filter(i=>Math.abs((i.sj||0)-(i.cj||0))<.50).length,sjO:ITEMS.filter(i=>i.sj!=null&&i.cj==null).length,cjO:ITEMS.filter(i=>i.cj!=null&&i.sj==null).length,top};},[]);
   return(<>
-    <div style={{padding:"24px 28px 0"}}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:20}}>
-        {[{l:"Comparable",v:stats.matched,s:`of ${stats.total} total`,c:"#1c1c1e"},{l:"SJ Cheaper",v:stats.sjW,s:"items",c:"#34c759"},{l:"CJ Cheaper",v:stats.cjW,s:"items",c:"#ff9f0a"},{l:"Tied",v:stats.tie,s:"within $0.50",c:"#8e8e93"},{l:"Single Source",v:`${stats.sjO} / ${stats.cjO}`,s:"SJ / CJ",c:"#636366"}].map((x,i)=><div key={i} style={{...S.card,padding:"16px 18px"}}><div style={{...S.lbl,marginBottom:6}}>{x.l}</div><div style={{fontSize:28,fontWeight:700,color:x.c,lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{x.v}</div><div style={{fontSize:11,color:"#aeaeb2",marginTop:3}}>{x.s}</div></div>)}
+    <div className="content-pad-top">
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8,marginBottom:16}}>
+        {[{l:"Comparable",v:stats.matched,s:`of ${stats.total}`,c:"#1c1c1e"},{l:"SJ Cheaper",v:stats.sjW,s:"items",c:"#34c759"},{l:"CJ Cheaper",v:stats.cjW,s:"items",c:"#ff9f0a"},{l:"Tied",v:stats.tie,s:"<$0.50",c:"#8e8e93"},{l:"Single",v:`${stats.sjO}/${stats.cjO}`,s:"SJ/CJ",c:"#636366"}].map((x,i)=><div key={i} style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9}}>{x.l}</div><div style={{fontSize:22,fontWeight:700,color:x.c,lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{x.v}</div><div style={{fontSize:10,color:"#aeaeb2",marginTop:2}}>{x.s}</div></div>)}
       </div>
-      {stats.top.length>0&&<div style={{...S.card,padding:"18px 20px",marginBottom:20}}><div style={{...S.lbl,marginBottom:14}}>Biggest Savings Opportunities</div>{stats.top.map(s=><div key={s.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:12,fontWeight:500,color:"#3a3a3c",width:200,flexShrink:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.name}</span><div style={{flex:1,background:"#f2f2f7",borderRadius:2,height:4,overflow:"hidden"}}><div style={{height:4,borderRadius:2,width:`${Math.min(s.p,100)}%`,background:s.win==="sj"?"linear-gradient(90deg,#34c759,#28a745)":"linear-gradient(90deg,#ff9f0a,#e8890a)"}}/></div><Badge v={s.win}/><span style={{fontSize:12,fontWeight:700,color:s.win==="sj"?"#34c759":"#ff9f0a",width:60,textAlign:"right",fontVariantNumeric:"tabular-nums"}}>-${s.d.toFixed(2)}</span><span style={{fontSize:11,color:"#aeaeb2",width:36,textAlign:"right"}}>{s.p.toFixed(0)}%</span></div>)}</div>}
-      <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:20}}>{CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={{...pill(cat===c),padding:"7px 16px",borderRadius:20,fontSize:12,fontWeight:600,letterSpacing:.2,whiteSpace:"nowrap"}}>{c} ({c==="All"?ITEMS.length:ITEMS.filter(i=>i.cat===c).length})</button>)}</div>
+      {stats.top.length>0&&<div className="desktop-only" style={{...S.card,padding:"18px 20px",marginBottom:20}}><div style={{...S.lbl,marginBottom:14}}>Biggest Savings Opportunities</div>{stats.top.map(s=><div key={s.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span className="savings-name" style={{fontSize:12,fontWeight:500,color:"#3a3a3c",flexShrink:0,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.name}</span><div style={{flex:1,background:"#f2f2f7",borderRadius:2,height:4,overflow:"hidden"}}><div style={{height:4,borderRadius:2,width:`${Math.min(s.p,100)}%`,background:s.win==="sj"?"linear-gradient(90deg,#34c759,#28a745)":"linear-gradient(90deg,#ff9f0a,#e8890a)"}}/></div><Badge v={s.win}/><span style={{fontSize:12,fontWeight:700,color:s.win==="sj"?"#34c759":"#ff9f0a",width:60,textAlign:"right",fontVariantNumeric:"tabular-nums"}}>-${s.d.toFixed(2)}</span><span style={{fontSize:11,color:"#aeaeb2",width:36,textAlign:"right"}}>{s.p.toFixed(0)}%</span></div>)}</div>}
+      <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:16,WebkitOverflowScrolling:"touch"}}>{CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={{...pill(cat===c),padding:"7px 12px",borderRadius:20,fontSize:11,fontWeight:600,letterSpacing:.2,whiteSpace:"nowrap"}}>{c} ({c==="All"?ITEMS.length:ITEMS.filter(i=>i.cat===c).length})</button>)}</div>
     </div>
-    <div style={{padding:"12px 28px",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",borderTop:"1px solid rgba(0,0,0,.04)",borderBottom:"1px solid rgba(0,0,0,.04)",background:"rgba(255,255,255,.3)"}}>
-      <input placeholder="Search items..." value={q} onChange={e=>setQ(e.target.value)} style={{...S.card,borderRadius:10,padding:"8px 14px",color:"#1c1c1e",fontSize:13,fontFamily:"inherit",width:200,outline:"none"}}/>
-      {[["all","All"],["matched","Matched"],["sj-only","SJ Only"],["cj-only","CJ Only"]].map(([v,l])=><button key={v} onClick={()=>setFilter(v)} style={{...pill(filter===v),padding:"6px 14px",borderRadius:8,fontSize:11,fontWeight:600}}>{l}</button>)}
-      <div style={{marginLeft:"auto"}}/><span style={{...S.lbl,letterSpacing:1,marginRight:4}}>Sort</span>
-      {[["category","Category"],["savings","Savings"],["name","A-Z"],["price","Price"]].map(([v,l])=><button key={v} onClick={()=>setSort(v)} style={{...pill(sort===v),padding:"6px 14px",borderRadius:8,fontSize:11,fontWeight:600}}>{l}</button>)}
+    <div className="filter-bar" style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",borderTop:"1px solid rgba(0,0,0,.04)",borderBottom:"1px solid rgba(0,0,0,.04)",background:"rgba(255,255,255,.3)"}}>
+      <input className="search-input" placeholder="Search items..." value={q} onChange={e=>setQ(e.target.value)} style={{...S.card,borderRadius:10,padding:"8px 14px",color:"#1c1c1e",fontSize:13,fontFamily:"inherit",outline:"none"}}/>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {[["all","All"],["matched","Matched"],["sj-only","SJ"],["cj-only","CJ"]].map(([v,l])=><button key={v} onClick={()=>setFilter(v)} style={{...pill(filter===v),padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600}}>{l}</button>)}
+      </div>
+      <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}><span className="desktop-only" style={{...S.lbl,letterSpacing:1,marginRight:4}}>Sort</span>
+        {[["category","Cat"],["savings","$"],["name","A-Z"],["price","Low"]].map(([v,l])=><button key={v} onClick={()=>setSort(v)} style={{...pill(sort===v),padding:"6px 10px",borderRadius:8,fontSize:11,fontWeight:600}}>{l}</button>)}
+      </div>
     </div>
-    <div style={{padding:"10px 28px",display:"grid",gridTemplateColumns:"1fr 60px 90px 90px 100px 72px",gap:8,...S.lbl,letterSpacing:1}}><span>Item</span><span>Unit</span><span style={{textAlign:"right",color:"#34c759"}}>SJ Price</span><span style={{textAlign:"right",color:"#ff9f0a"}}>CJ Price</span><span style={{textAlign:"right"}}>Savings</span><span style={{textAlign:"center"}}>Winner</span></div>
-    <div style={{padding:"0 28px 28px",overflowY:"auto",maxHeight:"calc(100vh - 560px)"}}>
+    <div className="grid-header item-list-pad" style={{padding:"10px 28px",...S.lbl,letterSpacing:1}}><span>Item</span><span>Unit</span><span style={{textAlign:"right",color:"#34c759"}}>SJ</span><span style={{textAlign:"right",color:"#ff9f0a"}}>CJ</span><span style={{textAlign:"right"}}>Savings</span><span style={{textAlign:"center"}}>Win</span></div>
+    <div className="item-list-pad" style={{overflowY:"auto",maxHeight:"calc(100vh - 480px)"}}>
       {rows.length===0&&<div style={{textAlign:"center",padding:48,color:"#aeaeb2",fontWeight:500}}>No items match</div>}
       {rows.map(item=>{const wi=w(item.sj,item.cj),d=diff(item.sj,item.cj),p=pct(item.sj,item.cj),ex=open===item.id;return<div key={item.id} onClick={()=>setOpen(ex?null:item.id)} style={{...S.card,borderRadius:12,marginBottom:6,cursor:"pointer",overflow:"hidden",transition:"all .15s",...(ex?{boxShadow:"0 2px 8px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04)"}:{})}}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 60px 90px 90px 100px 72px",gap:8,alignItems:"center",padding:"12px 16px"}}>
+        {/* Desktop row */}
+        <div className="grid-row desktop-only" style={{alignItems:"center",padding:"12px 16px"}}>
           <div><span style={{fontSize:13,fontWeight:600,color:"#1c1c1e"}}>{item.name}</span><span style={{fontSize:10,color:"#aeaeb2",marginLeft:8,fontWeight:500}}>{item.cat}</span></div>
           <span style={{fontSize:11,color:"#8e8e93",fontWeight:500}}>{item.unit}</span>
           <span style={{textAlign:"right",fontVariantNumeric:"tabular-nums",fontWeight:700,fontSize:14,color:item.sj==null?"#d1d1d6":wi==="sj"?"#34c759":"#3a3a3c"}}>{fmt(item.sj)}</span>
@@ -143,8 +147,22 @@ function PriceCompareTab(){
           <span style={{textAlign:"right",fontSize:12,fontWeight:600,fontVariantNumeric:"tabular-nums",color:d!=null?"#1c1c1e":"#d1d1d6"}}>{d!=null?`${d.toFixed(2)} (${p.toFixed(0)}%)`:"—"}</span>
           <span style={{textAlign:"center"}}><Badge v={wi}/></span>
         </div>
-        {ex&&<div style={{padding:"0 16px 16px",fontSize:12,color:"#636366",lineHeight:1.7}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginTop:4}}>
+        {/* Mobile card */}
+        <div className="mobile-only" style={{padding:"12px 14px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <div style={{flex:1}}><span style={{fontSize:13,fontWeight:600,color:"#1c1c1e",lineHeight:1.3,display:"block"}}>{item.name}</span><span style={{fontSize:10,color:"#aeaeb2",fontWeight:500}}>{item.cat} · {item.unit}</span></div>
+            <Badge v={wi}/>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+            <div style={{display:"flex",gap:12}}>
+              <div><div style={{fontSize:9,color:"#34c759",fontWeight:600,marginBottom:2}}>SJ</div><div style={{fontSize:15,fontWeight:700,color:item.sj==null?"#d1d1d6":wi==="sj"?"#34c759":"#3a3a3c",fontVariantNumeric:"tabular-nums"}}>{fmt(item.sj)}</div></div>
+              <div><div style={{fontSize:9,color:"#ff9f0a",fontWeight:600,marginBottom:2}}>CJ</div><div style={{fontSize:15,fontWeight:700,color:item.cj==null?"#d1d1d6":wi==="cj"?"#ff9f0a":"#3a3a3c",fontVariantNumeric:"tabular-nums"}}>{fmt(item.cj)}</div></div>
+            </div>
+            {d!=null&&<div style={{textAlign:"right"}}><div style={{fontSize:9,color:"#8e8e93",fontWeight:600,marginBottom:2}}>SAVE</div><div style={{fontSize:14,fontWeight:700,color:wi==="sj"?"#34c759":"#ff9f0a",fontVariantNumeric:"tabular-nums"}}>${d.toFixed(2)}</div></div>}
+          </div>
+        </div>
+        {ex&&<div style={{padding:"0 14px 14px",fontSize:12,color:"#636366",lineHeight:1.7}}>
+          <div className="detail-grid" style={{marginTop:4}}>
             {item.sjD&&<div style={{background:"#f8f8fa",borderRadius:10,padding:"12px 14px"}}><div style={{...S.lbl,color:"#34c759",marginBottom:4}}>SJ Details</div><div style={{color:"#3a3a3c"}}>{item.sjD}</div>{item.sjI&&<div style={{color:"#aeaeb2",fontSize:11,marginTop:4}}>Invoices: {item.sjI}</div>}</div>}
             {item.cjD&&<div style={{background:"#f8f8fa",borderRadius:10,padding:"12px 14px"}}><div style={{...S.lbl,color:"#ff9f0a",marginBottom:4}}>CJ Details</div><div style={{color:"#3a3a3c"}}>{item.cjD}</div>{item.cjI&&<div style={{color:"#aeaeb2",fontSize:11,marginTop:4}}>Invoices: {item.cjI}</div>}</div>}
           </div>
@@ -179,86 +197,97 @@ function MyOrderTab(){
 
   const example="1 box beef shank\n2 boxes chicken breast\n1 case soy sauce\n2 boxes deep fried oil\n1 box bean sprout\n1 box rock candy sugar\n1 bag sugar\n1 bag salt\n3 bags white onion\n10lbs jalapeno\n1 box ginger\n1 box green leaf lettuce\n2 boxes pho noodle\n1 box sweet and sour sauce\n2 boxes sriracha bottle\n2 boxes hoisin sauce\n1 box green onion";
 
-  return<div style={{padding:"24px 28px"}}>
+  return<div className="content-pad">
     {/* PASTE BOX */}
-    <div style={{...S.card,padding:"20px 24px",marginBottom:20}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-        <div style={S.lbl}>Paste Your Full Order List</div>
-        {!bulk&&<button onClick={()=>setBulk(example)} style={{...pill(false),padding:"5px 12px",borderRadius:7,fontSize:10,fontWeight:600,color:"#636366"}}>Load Example</button>}
+    <div style={{...S.card,padding:"16px",marginBottom:16}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
+        <div style={S.lbl}>Paste Order List</div>
+        {!bulk&&<button onClick={()=>setBulk(example)} style={{...pill(false),padding:"5px 12px",borderRadius:7,fontSize:10,fontWeight:600,color:"#636366"}}>Example</button>}
       </div>
       <textarea value={bulk} onChange={e=>{setBulk(e.target.value);setPreview(null);}} onKeyDown={e=>{if((e.metaKey||e.ctrlKey)&&e.key==="Enter")process();}}
-        placeholder={"Paste your order here — one item per line:\n\n1 box beef shank\n2 boxes chicken breast\n1 case soy sauce\n10lbs jalapeno\n3 bags white onion\n...\n\nThen hit \"Process Order\" to match everything."}
-        rows={8} style={{...S.card,borderRadius:12,padding:"14px 16px",color:"#1c1c1e",fontSize:13,fontFamily:"'SF Mono','Menlo','Monaco','Courier New',monospace",lineHeight:1.8,width:"100%",resize:"vertical",outline:"none",minHeight:160}}/>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:12}}>
-        <div style={{fontSize:11,color:"#aeaeb2"}}>{bulk.trim()?`${bulk.trim().split(/\n/).filter(Boolean).length} lines detected`:"Supports: qty + unit + item name per line"}<span style={{marginLeft:12,color:"#c7c7cc"}}>&#8984;+Enter to process</span></div>
+        placeholder={"1 box beef shank\n2 boxes chicken breast\n1 case soy sauce\n10lbs jalapeno\n..."}
+        rows={6} style={{...S.card,borderRadius:12,padding:"12px 14px",color:"#1c1c1e",fontSize:14,fontFamily:"'SF Mono','Menlo','Monaco','Courier New',monospace",lineHeight:1.7,width:"100%",resize:"vertical",outline:"none",minHeight:120}}/>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10,flexWrap:"wrap",gap:8}}>
+        <div style={{fontSize:11,color:"#aeaeb2"}}>{bulk.trim()?`${bulk.trim().split(/\n/).filter(Boolean).length} lines`:""}</div>
         <div style={{display:"flex",gap:8}}>
-          {bulk&&<button onClick={()=>{setBulk("");setPreview(null);}} style={{...pill(false),padding:"9px 18px",borderRadius:10,fontSize:12,fontWeight:600,color:"#ff3b30"}}>Clear</button>}
-          <button onClick={process} disabled={!bulk.trim()} style={{...pill(!!bulk.trim()),padding:"9px 24px",borderRadius:10,fontSize:13,fontWeight:600,opacity:bulk.trim()?1:.4}}>&#9889; Process Order</button>
+          {bulk&&<button onClick={()=>{setBulk("");setPreview(null);}} style={{...pill(false),padding:"8px 14px",borderRadius:10,fontSize:12,fontWeight:600,color:"#ff3b30"}}>Clear</button>}
+          <button onClick={process} disabled={!bulk.trim()} style={{...pill(!!bulk.trim()),padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:600,opacity:bulk.trim()?1:.4}}>Process</button>
         </div>
       </div>
     </div>
 
     {/* PARSE PREVIEW */}
-    {preview&&<div style={{...S.card,padding:"20px 24px",marginBottom:20,border:"1px solid rgba(52,199,89,.15)"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-        <div><div style={{...S.lbl,marginBottom:4}}>Parse Preview</div><div style={{fontSize:12,color:"#636366"}}><span style={{color:"#34c759",fontWeight:700}}>{ps.matched} matched</span>{ps.unmatched>0&&<span style={{color:"#ff3b30",fontWeight:700,marginLeft:10}}>{ps.unmatched} not found</span>}<span style={{color:"#aeaeb2",marginLeft:10}}>of {ps.total} lines</span></div></div>
-        <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>setPreview(null)} style={{...pill(false),padding:"8px 16px",borderRadius:10,fontSize:12,fontWeight:600,color:"#636366"}}>Cancel</button>
-          <button onClick={confirm} style={{...pill(true),padding:"8px 20px",borderRadius:10,fontSize:13,fontWeight:600,background:"linear-gradient(180deg,#34c759 0%,#28a745 100%)"}}>&#10003; Add {preview.length} Items to Order</button>
+    {preview&&<div style={{...S.card,padding:"16px",marginBottom:16,border:"1px solid rgba(52,199,89,.15)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12,flexWrap:"wrap",gap:8}}>
+        <div><div style={{...S.lbl,marginBottom:4}}>Preview</div><div style={{fontSize:12,color:"#636366"}}><span style={{color:"#34c759",fontWeight:700}}>{ps.matched}</span>{ps.unmatched>0&&<span style={{color:"#ff3b30",fontWeight:700,marginLeft:6}}>+{ps.unmatched} miss</span>}</div></div>
+        <div style={{display:"flex",gap:6}}>
+          <button onClick={()=>setPreview(null)} style={{...pill(false),padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600,color:"#636366"}}>Cancel</button>
+          <button onClick={confirm} style={{...pill(true),padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:600,background:"linear-gradient(180deg,#34c759 0%,#28a745 100%)"}}>Add All</button>
         </div>
       </div>
-      <div style={{maxHeight:360,overflowY:"auto"}}>
-        <div style={{display:"grid",gridTemplateColumns:"36px 1fr 1fr 72px 72px 110px",gap:8,padding:"6px 8px",...S.lbl,letterSpacing:.8,marginBottom:4}}><span style={{textAlign:"center"}}>Qty</span><span>You Typed</span><span>Matched To</span><span style={{textAlign:"center"}}>Status</span><span style={{textAlign:"center"}}>Vendor</span><span style={{textAlign:"right"}}>Est. Cost</span></div>
-        {preview.map((p,i)=>{const b=p.matched?bestV(p.matched):{vendor:null,price:null};return<div key={i} style={{display:"grid",gridTemplateColumns:"36px 1fr 1fr 72px 72px 110px",gap:8,alignItems:"center",padding:"8px 8px",borderBottom:"1px solid rgba(0,0,0,.04)",fontSize:12}}>
-          <span style={{color:"#1c1c1e",fontSize:13,fontWeight:700,textAlign:"center"}}>{p.qty}</span>
-          <div style={{color:"#8e8e93",fontStyle:"italic"}}>{p.rawLine}</div>
-          <div>{p.matched?<span style={{fontWeight:600,color:"#1c1c1e"}}>{p.matched.name}</span>:<span style={{color:"#ff3b30",fontWeight:500}}>{p.itemText}</span>}</div>
-          <span style={{textAlign:"center"}}><span style={{display:"inline-block",padding:"2px 8px",borderRadius:5,fontSize:9,fontWeight:600,background:p.matched?"#e8f7ed":"#ffeaea",color:p.matched?"#1b7a3d":"#cc2936",lineHeight:"15px"}}>{p.matched?"&#10003; Match":"&#10007; None"}</span></span>
-          <span style={{textAlign:"center"}}><VP v={b.vendor}/></span>
-          <span style={{textAlign:"right",fontWeight:700,fontVariantNumeric:"tabular-nums",color:b.price!=null?"#1c1c1e":"#d1d1d6"}}>{b.price!=null?`${fmt(b.price)} x ${p.qty} = ${(b.price*p.qty).toFixed(2)}`:"—"}</span>
+      <div style={{maxHeight:300,overflowY:"auto"}}>
+        {preview.map((p,i)=>{const b=p.matched?bestV(p.matched):{vendor:null,price:null};return<div key={i} style={{...S.card,padding:"10px 12px",marginBottom:6,borderRadius:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:11,color:"#8e8e93",marginBottom:2}}>{p.qty}x {p.rawLine}</div>
+              <div style={{fontSize:13,fontWeight:600,color:p.matched?"#1c1c1e":"#ff3b30"}}>{p.matched?p.matched.name:p.itemText}</div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <VP v={b.vendor}/>
+              {b.price!=null&&<span style={{fontSize:13,fontWeight:700,color:"#1c1c1e",fontVariantNumeric:"tabular-nums"}}>${(b.price*p.qty).toFixed(2)}</span>}
+            </div>
+          </div>
         </div>})}
       </div>
     </div>}
 
     {/* ORDER SUMMARY */}
-    {lines.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:20}}>
-      <div style={{...S.card,padding:"16px 18px"}}><div style={{...S.lbl,marginBottom:6}}>Order Total</div><div style={{fontSize:28,fontWeight:700,color:"#1c1c1e",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>${st.total.toFixed(2)}</div><div style={{fontSize:11,color:"#aeaeb2",marginTop:3}}>{st.lines} line items</div></div>
-      <div style={{...S.card,padding:"16px 18px"}}><div style={{...S.lbl,marginBottom:6,color:"#34c759"}}>Buy from SJ</div><div style={{fontSize:28,fontWeight:700,color:"#34c759",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{st.sjN}</div><div style={{fontSize:11,color:"#aeaeb2",marginTop:3}}>${st.sjT.toFixed(2)}</div></div>
-      <div style={{...S.card,padding:"16px 18px"}}><div style={{...S.lbl,marginBottom:6,color:"#ff9f0a"}}>Buy from CJ</div><div style={{fontSize:28,fontWeight:700,color:"#ff9f0a",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{st.cjN}</div><div style={{fontSize:11,color:"#aeaeb2",marginTop:3}}>${st.cjT.toFixed(2)}</div></div>
-      {st.unmatched>0&&<div style={{...S.card,padding:"16px 18px"}}><div style={{...S.lbl,marginBottom:6,color:"#ff3b30"}}>Not Found</div><div style={{fontSize:28,fontWeight:700,color:"#ff3b30",lineHeight:1.1}}>{st.unmatched}</div><div style={{fontSize:11,color:"#aeaeb2",marginTop:3}}>need manual price</div></div>}
+    {lines.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(80px,1fr))",gap:8,marginBottom:16}}>
+      <div style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9}}>Total</div><div style={{fontSize:20,fontWeight:700,color:"#1c1c1e",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>${st.total.toFixed(0)}</div><div style={{fontSize:10,color:"#aeaeb2",marginTop:2}}>{st.lines} items</div></div>
+      <div style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9,color:"#34c759"}}>SJ</div><div style={{fontSize:20,fontWeight:700,color:"#34c759",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{st.sjN}</div><div style={{fontSize:10,color:"#aeaeb2",marginTop:2}}>${st.sjT.toFixed(0)}</div></div>
+      <div style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9,color:"#ff9f0a"}}>CJ</div><div style={{fontSize:20,fontWeight:700,color:"#ff9f0a",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{st.cjN}</div><div style={{fontSize:10,color:"#aeaeb2",marginTop:2}}>${st.cjT.toFixed(0)}</div></div>
+      {st.unmatched>0&&<div style={{...S.card,padding:"12px 14px"}}><div style={{...S.lbl,marginBottom:4,fontSize:9,color:"#ff3b30"}}>Miss</div><div style={{fontSize:20,fontWeight:700,color:"#ff3b30",lineHeight:1.1}}>{st.unmatched}</div></div>}
     </div>}
 
     {/* ORDER LINES */}
     {lines.length>0&&<>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
         <div style={{...S.lbl,letterSpacing:1.5}}>Order Items</div>
-        <button onClick={clear} style={{...pill(false),padding:"5px 14px",borderRadius:8,fontSize:11,fontWeight:600,color:"#ff3b30"}}>Clear All</button>
+        <button onClick={clear} style={{...pill(false),padding:"5px 12px",borderRadius:8,fontSize:11,fontWeight:600,color:"#ff3b30"}}>Clear</button>
       </div>
-      <div style={{padding:"8px 16px",display:"grid",gridTemplateColumns:"1fr 80px 60px 90px 90px 100px 36px",gap:8,...S.lbl,letterSpacing:1}}><span>Item</span><span style={{textAlign:"center"}}>Buy From</span><span style={{textAlign:"center"}}>Qty</span><span style={{textAlign:"right"}}>Unit $</span><span style={{textAlign:"right"}}>Line Total</span><span style={{textAlign:"right"}}>Alt Price</span><span></span></div>
-      <div style={{overflowY:"auto",maxHeight:"calc(100vh - 520px)"}}>
-        {lines.map(l=>{const alt=l.vendor==="SJ"?l.cjP:l.sjP,altV=l.vendor==="SJ"?"CJ":"SJ",lt=l.price!=null?l.price*l.qty:null;return<div key={l.id} style={{...S.card,borderRadius:12,marginBottom:6,overflow:"hidden"}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 80px 60px 90px 90px 100px 36px",gap:8,alignItems:"center",padding:"12px 16px"}}>
-            <div><span style={{fontSize:13,fontWeight:600,color:l.itemId?"#1c1c1e":"#ff3b30"}}>{l.name}</span><span style={{fontSize:10,color:"#aeaeb2",marginLeft:8,fontWeight:500}}>{l.cat} · {l.unit}</span>{l.raw&&l.raw.toLowerCase()!==l.name.toLowerCase()&&<div style={{fontSize:10,color:"#c7c7cc",marginTop:1,fontStyle:"italic"}}>from: "{l.raw}"</div>}{!l.itemId&&<div style={{fontSize:10,color:"#ff3b30",marginTop:2,fontWeight:500}}>&#9888; Not in database</div>}{l.note&&<div style={{fontSize:10,color:"#8e6a00",marginTop:2}}>&#9888; {l.note}</div>}</div>
-            <span style={{textAlign:"center"}}><VP v={l.vendor}/></span>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:2}}>
-              <button onClick={()=>updQ(l.id,l.qty-1)} style={{width:22,height:22,borderRadius:6,border:"none",background:"#f2f2f7",color:"#636366",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>-</button>
-              <span style={{fontSize:14,fontWeight:700,color:"#1c1c1e",width:20,textAlign:"center",fontVariantNumeric:"tabular-nums"}}>{l.qty}</span>
-              <button onClick={()=>updQ(l.id,l.qty+1)} style={{width:22,height:22,borderRadius:6,border:"none",background:"#f2f2f7",color:"#636366",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>+</button>
+      <div style={{overflowY:"auto",maxHeight:"calc(100vh - 420px)"}}>
+        {lines.map(l=>{const alt=l.vendor==="SJ"?l.cjP:l.sjP,altV=l.vendor==="SJ"?"CJ":"SJ",lt=l.price!=null?l.price*l.qty:null;return<div key={l.id} style={{...S.card,borderRadius:12,marginBottom:6,overflow:"hidden",padding:"12px 14px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:600,color:l.itemId?"#1c1c1e":"#ff3b30",lineHeight:1.3}}>{l.name}</div>
+              <div style={{fontSize:10,color:"#aeaeb2",fontWeight:500,marginTop:2}}>{l.cat} · {l.unit}</div>
+              {!l.itemId&&<div style={{fontSize:10,color:"#ff3b30",marginTop:2,fontWeight:500}}>Not in database</div>}
+              {l.note&&<div style={{fontSize:10,color:"#8e6a00",marginTop:2}}>{l.note}</div>}
             </div>
-            <span style={{textAlign:"right",fontVariantNumeric:"tabular-nums",fontWeight:700,fontSize:14,color:l.price!=null?"#1c1c1e":"#d1d1d6"}}>{fmt(l.price)}</span>
-            <span style={{textAlign:"right",fontVariantNumeric:"tabular-nums",fontWeight:700,fontSize:14,color:lt!=null?"#1c1c1e":"#d1d1d6"}}>{lt!=null?`${lt.toFixed(2)}`:"—"}</span>
-            <span style={{textAlign:"right",fontSize:11,color:"#aeaeb2",fontVariantNumeric:"tabular-nums"}}>{alt!=null?`${altV} ${fmt(alt)}`:"—"}</span>
-            <button onClick={()=>rem(l.id)} style={{width:24,height:24,borderRadius:6,border:"none",background:"transparent",color:"#d1d1d6",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}} onMouseEnter={e=>e.currentTarget.style.color="#ff3b30"} onMouseLeave={e=>e.currentTarget.style.color="#d1d1d6"}>&#10005;</button>
+            <button onClick={()=>rem(l.id)} style={{width:28,height:28,borderRadius:6,border:"none",background:"#f2f2f7",color:"#aeaeb2",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>&#10005;</button>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <VP v={l.vendor}/>
+              <div style={{display:"flex",alignItems:"center",gap:4}}>
+                <button onClick={()=>updQ(l.id,l.qty-1)} style={{width:28,height:28,borderRadius:6,border:"none",background:"#f2f2f7",color:"#636366",fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>-</button>
+                <span style={{fontSize:16,fontWeight:700,color:"#1c1c1e",width:28,textAlign:"center",fontVariantNumeric:"tabular-nums"}}>{l.qty}</span>
+                <button onClick={()=>updQ(l.id,l.qty+1)} style={{width:28,height:28,borderRadius:6,border:"none",background:"#f2f2f7",color:"#636366",fontSize:16,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+              </div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:16,fontWeight:700,color:lt!=null?"#1c1c1e":"#d1d1d6",fontVariantNumeric:"tabular-nums"}}>{lt!=null?`$${lt.toFixed(2)}`:"—"}</div>
+              {alt!=null&&<div style={{fontSize:10,color:"#aeaeb2",marginTop:2}}>{altV}: {fmt(alt)}</div>}
+            </div>
           </div>
         </div>;})}
       </div>
     </>}
 
-    {lines.length===0&&!preview&&<div style={{...S.card,padding:"60px 40px",textAlign:"center"}}>
-      <div style={{fontSize:40,marginBottom:12}}>&#128203;</div>
-      <div style={{fontSize:16,fontWeight:600,color:"#1c1c1e",marginBottom:6}}>Paste Your Full Order</div>
-      <div style={{fontSize:13,color:"#8e8e93",lineHeight:1.6,maxWidth:440,margin:"0 auto"}}>Paste your entire shopping list above — one item per line, exactly how you'd text it to your distributor. The system parses quantities, matches to your {ITEMS.length}-item invoice database, and finds the cheapest vendor for each item.</div>
-      <div style={{fontSize:12,color:"#aeaeb2",marginTop:16,lineHeight:1.8,fontFamily:"'SF Mono','Menlo',monospace"}}>Example:<br/>2 boxes chicken breast<br/>1 box bean sprout<br/>10lbs jalapeno</div>
+    {lines.length===0&&!preview&&<div style={{...S.card,padding:"40px 24px",textAlign:"center"}}>
+      <div style={{fontSize:36,marginBottom:10}}>&#128203;</div>
+      <div style={{fontSize:15,fontWeight:600,color:"#1c1c1e",marginBottom:6}}>Paste Your Order</div>
+      <div style={{fontSize:12,color:"#8e8e93",lineHeight:1.5,maxWidth:300,margin:"0 auto"}}>Paste your shopping list above. The system matches items and finds the cheapest vendor.</div>
     </div>}
   </div>;
 }
@@ -267,15 +296,57 @@ function MyOrderTab(){
 export default function App(){
   const[tab,setTab]=useState("order");
   return<div style={{minHeight:"100vh",background:"#e8e8ed",fontFamily:"-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif",fontSize:13,color:"#1c1c1e"}}>
-    <style>{`*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:3px}@keyframes fadeSlide{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}`}</style>
-    <div style={{padding:"32px 28px 0"}}>
-      <div style={{display:"flex",alignItems:"baseline",gap:12,marginBottom:4}}><h1 style={{fontSize:34,fontWeight:700,color:"#1c1c1e",letterSpacing:-.5,lineHeight:1.1}}>V Pho</h1><span style={{...S.lbl,letterSpacing:2}}>Purchasing Board</span></div>
-      <p style={{fontSize:12,color:"#aeaeb2",fontWeight:500,marginBottom:20}}>{ITEMS.length} items · 15 invoices · Dec 2025 – Jan 2026 · CJ Distribution vs SJ Distributors</p>
+    <style>{`
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      ::-webkit-scrollbar{width:6px}
+      ::-webkit-scrollbar-track{background:transparent}
+      ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:3px}
+      @keyframes fadeSlide{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+      .desktop-only{display:block}
+      .mobile-only{display:none}
+      .header-pad{padding:32px 28px 0}
+      .content-pad{padding:24px 28px}
+      .content-pad-top{padding:24px 28px 0}
+      .footer-pad{padding:14px 28px}
+      .filter-bar{padding:12px 28px}
+      .item-list-pad{padding:0 28px 28px}
+      .tab-btn{padding:9px 24px;font-size:13px}
+      .search-input{width:200px}
+      .savings-name{width:200px}
+      .grid-header,.grid-row{display:grid;grid-template-columns:1fr 60px 90px 90px 100px 72px;gap:8px}
+      .order-grid-header,.order-grid-row{display:grid;grid-template-columns:1fr 80px 60px 90px 90px 100px 36px;gap:8px}
+      .preview-grid-header,.preview-grid-row{display:grid;grid-template-columns:36px 1fr 1fr 72px 72px 110px;gap:8px}
+      .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+      @media(max-width:768px){
+        .desktop-only{display:none!important}
+        .mobile-only{display:block!important}
+        .header-pad{padding:20px 16px 0}
+        .content-pad{padding:16px}
+        .content-pad-top{padding:16px 16px 0}
+        .footer-pad{padding:12px 16px}
+        .filter-bar{padding:12px 16px;flex-direction:column;align-items:stretch!important}
+        .item-list-pad{padding:0 16px 16px}
+        .tab-btn{padding:8px 16px;font-size:12px}
+        .search-input{width:100%!important}
+        .savings-name{width:120px}
+        .grid-header{display:none}
+        .grid-row{display:flex;flex-direction:column;gap:4px}
+        .order-grid-header{display:none}
+        .order-grid-row{display:flex;flex-direction:column;gap:8px}
+        .preview-grid-header{display:none}
+        .preview-grid-row{display:flex;flex-direction:column;gap:6px}
+        .detail-grid{grid-template-columns:1fr}
+      }
+    `}</style>
+    <div className="header-pad">
+      <div style={{display:"flex",alignItems:"baseline",gap:12,marginBottom:4,flexWrap:"wrap"}}><h1 style={{fontSize:28,fontWeight:700,color:"#1c1c1e",letterSpacing:-.5,lineHeight:1.1}}>V Pho</h1><span style={{...S.lbl,letterSpacing:2}}>Purchasing Board</span></div>
+      <p className="desktop-only" style={{fontSize:12,color:"#aeaeb2",fontWeight:500,marginBottom:20}}>{ITEMS.length} items · 15 invoices · Dec 2025 – Jan 2026 · CJ Distribution vs SJ Distributors</p>
+      <p className="mobile-only" style={{fontSize:11,color:"#aeaeb2",fontWeight:500,marginBottom:16}}>{ITEMS.length} items · CJ vs SJ</p>
       <div style={{display:"flex",gap:4,marginBottom:4,background:"rgba(0,0,0,.04)",borderRadius:12,padding:3,width:"fit-content"}}>
-        {[["compare","Price Compare"],["order","My Order Today"]].map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{border:"none",cursor:"pointer",fontFamily:"inherit",fontSize:13,fontWeight:600,letterSpacing:.1,padding:"9px 24px",borderRadius:10,transition:"all .15s",background:tab===k?"linear-gradient(180deg,#fff 0%,#f8f8fa 100%)":"transparent",color:tab===k?"#1c1c1e":"#8e8e93",boxShadow:tab===k?"0 1px 3px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.9)":"none"}}>{l}</button>)}
+        {[["compare","Price Compare"],["order","My Order"]].map(([k,l])=><button key={k} className="tab-btn" onClick={()=>setTab(k)} style={{border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,letterSpacing:.1,borderRadius:10,transition:"all .15s",background:tab===k?"linear-gradient(180deg,#fff 0%,#f8f8fa 100%)":"transparent",color:tab===k?"#1c1c1e":"#8e8e93",boxShadow:tab===k?"0 1px 3px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.9)":"none"}}>{l}</button>)}
       </div>
     </div>
     {tab==="compare"?<PriceCompareTab/>:<MyOrderTab/>}
-    <div style={{padding:"14px 28px",display:"flex",justifyContent:"space-between",fontSize:11,color:"#aeaeb2",fontWeight:500,borderTop:"1px solid rgba(0,0,0,.04)"}}><span>V Pho · 930 West Hamilton Ave, Campbell CA 95008</span><span>{tab==="compare"?`${ITEMS.length} items · Click rows for details`:"Paste full list · Auto-matches cheapest vendor"}</span></div>
+    <div className="footer-pad" style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#aeaeb2",fontWeight:500,borderTop:"1px solid rgba(0,0,0,.04)",flexWrap:"wrap",gap:8}}><span>V Pho · Campbell CA</span><span className="desktop-only">{tab==="compare"?`${ITEMS.length} items · Click rows for details`:"Paste full list · Auto-matches cheapest vendor"}</span></div>
   </div>;
 }
