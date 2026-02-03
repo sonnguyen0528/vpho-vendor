@@ -295,7 +295,9 @@ function MyOrderTab(){
 /* ══════ MAIN ══════ */
 export default function App(){
   const[tab,setTab]=useState("order");
-  return<div style={{minHeight:"100vh",background:"#e8e8ed",fontFamily:"-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif",fontSize:13,color:"#1c1c1e"}}>
+  const[viewMode,setViewMode]=useState("auto"); // "auto", "mobile", "desktop"
+  const viewClass=viewMode==="auto"?"":viewMode==="mobile"?"force-mobile":"force-desktop";
+  return<div className={viewClass} style={{minHeight:"100vh",background:"#e8e8ed",fontFamily:"-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif",fontSize:13,color:"#1c1c1e"}}>
     <style>{`
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
       ::-webkit-scrollbar{width:6px}
@@ -337,6 +339,36 @@ export default function App(){
         .preview-grid-row{display:flex;flex-direction:column;gap:6px}
         .detail-grid{grid-template-columns:1fr}
       }
+      /* Force mobile view */
+      .force-mobile .desktop-only{display:none!important}
+      .force-mobile .mobile-only{display:block!important}
+      .force-mobile .header-pad{padding:20px 16px 0}
+      .force-mobile .content-pad{padding:16px}
+      .force-mobile .content-pad-top{padding:16px 16px 0}
+      .force-mobile .footer-pad{padding:12px 16px}
+      .force-mobile .filter-bar{padding:12px 16px;flex-direction:column;align-items:stretch!important}
+      .force-mobile .item-list-pad{padding:0 16px 16px}
+      .force-mobile .tab-btn{padding:8px 16px;font-size:12px}
+      .force-mobile .search-input{width:100%!important}
+      .force-mobile .savings-name{width:120px}
+      .force-mobile .grid-header{display:none!important}
+      .force-mobile .grid-row{display:flex!important;flex-direction:column;gap:4px}
+      .force-mobile .detail-grid{grid-template-columns:1fr}
+      /* Force desktop view */
+      .force-desktop .desktop-only{display:block!important}
+      .force-desktop .mobile-only{display:none!important}
+      .force-desktop .header-pad{padding:32px 28px 0}
+      .force-desktop .content-pad{padding:24px 28px}
+      .force-desktop .content-pad-top{padding:24px 28px 0}
+      .force-desktop .footer-pad{padding:14px 28px}
+      .force-desktop .filter-bar{padding:12px 28px;flex-direction:row;align-items:center!important}
+      .force-desktop .item-list-pad{padding:0 28px 28px}
+      .force-desktop .tab-btn{padding:9px 24px;font-size:13px}
+      .force-desktop .search-input{width:200px!important}
+      .force-desktop .savings-name{width:200px}
+      .force-desktop .grid-header{display:grid!important}
+      .force-desktop .grid-row{display:grid!important;grid-template-columns:1fr 60px 90px 90px 100px 72px;gap:8px}
+      .force-desktop .detail-grid{grid-template-columns:1fr 1fr}
     `}</style>
     <div className="header-pad">
       <div style={{display:"flex",alignItems:"baseline",gap:12,marginBottom:4,flexWrap:"wrap"}}><h1 style={{fontSize:28,fontWeight:700,color:"#1c1c1e",letterSpacing:-.5,lineHeight:1.1}}>V Pho</h1><span style={{...S.lbl,letterSpacing:2}}>Purchasing Board</span></div>
@@ -347,6 +379,15 @@ export default function App(){
       </div>
     </div>
     {tab==="compare"?<PriceCompareTab/>:<MyOrderTab/>}
-    <div className="footer-pad" style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#aeaeb2",fontWeight:500,borderTop:"1px solid rgba(0,0,0,.04)",flexWrap:"wrap",gap:8}}><span>V Pho · Campbell CA</span><span className="desktop-only">{tab==="compare"?`${ITEMS.length} items · Click rows for details`:"Paste full list · Auto-matches cheapest vendor"}</span></div>
+    <div className="footer-pad" style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:11,color:"#aeaeb2",fontWeight:500,borderTop:"1px solid rgba(0,0,0,.04)",flexWrap:"wrap",gap:8}}>
+      <span>V Pho · Campbell CA</span>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <span className="desktop-only">{tab==="compare"?`${ITEMS.length} items · Click rows for details`:"Paste full list · Auto-matches cheapest vendor"}</span>
+        <button onClick={()=>setViewMode(v=>v==="auto"?"mobile":v==="mobile"?"desktop":"auto")} style={{background:"linear-gradient(180deg,#fff 0%,#f8f8fa 100%)",border:"none",borderRadius:8,padding:"6px 10px",cursor:"pointer",fontSize:14,boxShadow:"0 1px 3px rgba(0,0,0,.08)",display:"flex",alignItems:"center",gap:4}} title={`View: ${viewMode}`}>
+          {viewMode==="auto"?"🔄":viewMode==="mobile"?"📱":"💻"}
+          <span style={{fontSize:10,color:"#636366",fontWeight:600}}>{viewMode==="auto"?"Auto":viewMode==="mobile"?"Mobile":"Desktop"}</span>
+        </button>
+      </div>
+    </div>
   </div>;
 }
