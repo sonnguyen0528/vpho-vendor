@@ -373,7 +373,10 @@ Be concise and helpful. When asked about prices or recommendations, reference th
           <div style={{width:32,height:32,borderRadius:8,background:"linear-gradient(135deg,#d97706,#f59e0b)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🤖</div>
           <div><div style={{fontSize:14,fontWeight:600,color:"#1c1c1e"}}>Claude Assistant</div><div style={{fontSize:11,color:"#8e8e93"}}>V Pho Purchasing Help</div></div>
         </div>
-        <button onClick={()=>{saveKey("");setMessages([]);}} style={{...pill(false),padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600,color:"#ff3b30"}}>Disconnect</button>
+        <div style={{display:"flex",gap:6}}>
+          {messages.length>0&&<button onClick={()=>setMessages([])} style={{...pill(false),padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600,color:"#007aff"}}>New Chat</button>}
+          <button onClick={()=>{saveKey("");setMessages([]);}} style={{...pill(false),padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600,color:"#ff3b30"}}>Disconnect</button>
+        </div>
       </div>
 
       {/* Messages */}
